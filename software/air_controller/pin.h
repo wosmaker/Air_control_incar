@@ -1,3 +1,5 @@
+ #pragma once
+
 //  Arduino pin assignment
 // 
 //                   ATMega328p
@@ -20,31 +22,31 @@
 
 
 // fan control **pwm with low frequency
-#define front_fan 		0	
-#define rear_fan			0
+#define _front_fan 				10	
+#define _rear_fan					9
 
 // left encoder **leften -> left encoder
-#define leften_outa		0
-#define leften_outb		0
-#define leften_btn		0
+#define _leften_outa			18
+#define _leften_outb			17
+#define _leften_btn				19
 
 // right encoder **righten -> right encoder
-#define righten_outa	0
-#define righten_outb	0
-#define righten_btn		0		
+#define _righten_outa			3
+#define _righten_outb			2
+#define _righten_btn			4	
 
 // compressor control
-#define compressor		0
+#define _compressor				5
 
 // lcd pin (spi)
-#define blacklight		0
-#define sck						0
-#define sda						0
-#define dc						0
-#define cs 						0
-#define lcd_reset			0
+#define tft_blacklight		6
+#define tft_sck						13
+#define tft_sda						11
+#define tft_dc						8
+#define tft_cs 						12
+#define tft_reset					7
 
-// sensor
-#define front_temp		0
-#define rear_temp			0
+// sensor analog pin
+#define _front_temp				A1
+#define _rear_temp				A2
 
