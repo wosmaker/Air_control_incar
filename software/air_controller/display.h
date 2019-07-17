@@ -48,7 +48,6 @@ void tempset()
 	tft.setTextColor(ST7735_WHITE,clear_temp);
 	tft.setCursor(103,56);
 	tft.print(conv::front_temp_set,1);
-	buffer_front_tempset = conv::front_temp_set;
 }
 
 void tempread()
@@ -64,18 +63,25 @@ void fanspeed()
 	if(conv::mode == 3)
 	{
 		 // front 
-		buffer_front_speed =  map( conv::real_front_speed,min_pwm_speed,max_pwm_speed,0,105);
-		tft.fillRect( 35, 12, buffer_front_speed,5, ST7735_WHITE);
-		tft.fillRect(35 + buffer_front_speed, 12, 105-buffer_front_speed,5,ST7735_BLACK);
+		buffer_front_speed =  map( conv::real_front_speed,min_pwm_speed,max_pwm_speed,5,105);
+		tft.fillRect( 35, 5, buffer_front_speed,5, ST7735_WHITE);
+		tft.fillRect(35 + buffer_front_speed, 5, 105-buffer_front_speed,5,ST7735_BLACK);
 
 		// rear
-	
+		buffer_rear_speed =  map( conv::real_rear_speed,min_pwm_speed,max_pwm_speed,5,105);
+		tft.fillRect( 35, 14, buffer_front_speed,5, ST7735_WHITE);
+		tft.fillRect(35 + buffer_front_speed, 14, 105-buffer_front_speed,5,ST7735_BLACK);
 	}
 	else 
 	{
-		buffer_front_speed = map( conv::front_speed,min_fan_speed,max_fan_speed,0,105);
+		buffer_front_speed = map( conv::front_speed,min_fan_speed,max_fan_speed,5,105);
 		tft.fillRect( 35, 12,buffer_front_speed,5, ST7735_WHITE );
 		tft.fillRect( 35 + buffer_front_speed, 12, 105 - buffer_front_speed, 5, ST7735_BLACK );
+
+		// rear
+		buffer_rear_speed =  map( conv::rear_speed,min_fan_speed,max_fan_speed,5,105);
+		tft.fillRect( 35, 14, buffer_front_speed,5, ST7735_WHITE);
+		tft.fillRect(35 + buffer_front_speed, 14, 105-buffer_front_speed,5,ST7735_BLACK);
 	}
 	
 }
@@ -121,7 +127,7 @@ void display::run()
 
 void display::setup()
 {
-	tft.begin(115200);
+	// tft.begin(115200);
 	tft.initR(INITR_BLACKTAB);
 	analogWrite(tft_blacklight,conv::blacklight);
 	tft.setRotation( 1 );  
