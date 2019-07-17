@@ -26,13 +26,13 @@
 #define _rear_fan					9
 
 // left encoder **leften -> left encoder
-#define _leften_outa			18
-#define _leften_outb			17
+#define _leften_outa			17
+#define _leften_outb			18
 #define _leften_btn				19
 
 // right encoder **righten -> right encoder
-#define _righten_outa			3
-#define _righten_outb			2
+#define _righten_outa			2
+#define _righten_outb			3
 #define _righten_btn			4	
 
 // compressor control
@@ -47,6 +47,6 @@
 #define tft_reset					7
 
 // sensor analog pin
-#define _front_temp				A1
-#define _rear_temp				A2
+#define _front_temp				A2
+#define _rear_temp				A1
 

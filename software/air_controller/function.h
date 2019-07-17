@@ -1,9 +1,10 @@
 #pragma once
 
 #include <arduino.h>
-#include <SimpleRotary.h>
 #include <Encoder_Polling_V2.h>
 
+#include <RBD_Timer.h> 
+#include <RBD_Button.h> 
 
 #include "pin.h"
 #include "control_value.h"
@@ -15,6 +16,7 @@ class func
 		static uint8_t afmap(float temp_read,float temp_set);
 		static void encoder_left();
 		static void encoder_right();
+
 	public:
 		static void begin();
 
@@ -23,20 +25,44 @@ class func
 		static void fan_run();
 		static void mode_run();
 		static void temp_read_run();
-
 };
 
-	byte L,R,BR,BL;
-	uint8_t real_front_speed = 0, real_rear_speed = 0;
+	int8_t L,R;
 	uint64_t time_fan = 0;
+	uint64_t time_temp = 0;
+	
 
-// Pin A, Pin B, Button Pin
-SimpleRotary enL(_leften_outa,_leften_outb,_leften_btn);
-SimpleRotary enR(_righten_outa,_righten_outb,_righten_btn);
+	RBD::Button enLB(_leften_btn);
+	RBD::Button enRB(_righten_btn);
+	
+	uint8_t smooth_i = 0;
+	uint64_t time_smooth_temp = 0;
+	float s_temp[20]{2.1f};
+
+
+void smooth_temp_input(float input)
+{
+	s_temp[smooth_i++] = input;
+	if(smooth_i == 21) smooth_i = 0;
+}
+
+float smooth_temp_output()
+{
+	float sum_temp = 0;
+	for(int i = 0 ; i <= 20 ; i++)
+	{
+		sum_temp += s_temp[i]; 
+	}
+	sum_temp = sum_temp / 21; 
+	return sum_temp;
+}
 
 void func::begin()
 {
 	pinMode(_compressor,OUTPUT);
+	encoder_begin();
+	attach_encoder(enL, _leften_outa, _leften_outb);
+	attach_encoder(enR, _righten_outa, _righten_outb);
 }
 
 uint8_t func::fmap(uint8_t i)
@@ -61,24 +87,32 @@ uint8_t func::afmap(float temp_read,float temp_set)
 
 void func::temp_read_run()
 {
-	int fVo , rVo;
-	float R1 = 100000;
-	float fLogR2, fR2, fT;
-	float rLogR2, rR2, rT;
-	float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
+	if(millis() - time_smooth_temp > 100)
+	{
+		int fVo , rVo;
+		float R1 = 100000;
+		float fLogR2, fR2, fT;
+		float rLogR2, rR2, rT;
+		float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
-	fVo = analogRead(_front_temp);
-	fR2 = R1 * (1023.0/(float)fVo - 1.0);
-	fLogR2 = log(fR2);
-	fT = (1.0 / (c1 + c2*fLogR2 + c3*fLogR2*fLogR2*fLogR2));
-	conv::front_temp_read = fT - 273.15;
+		fVo = analogRead(_front_temp);
+		fR2 = R1 * (1023.0/(float)fVo - 1.0);
+		fLogR2 = log(fR2);
+		fT = (1.0 / (c1 + c2*fLogR2 + c3*fLogR2*fLogR2*fLogR2));
+		smooth_temp_input(fT - 273.15);
 
-	rVo = analogRead(_rear_temp);
-	rR2 = R1 * (1023.0/(float)rVo - 1.0);
-	rLogR2 = log(rR2);
-	rT = (1.0 / (c1 + c2*rLogR2 + c3*rLogR2*rLogR2*rLogR2));
-	conv::rear_temp_read = rT - 273.15;
-																																																																																																																																																																													
+		// rVo = analogRead(_rear_temp);
+		// rR2 = R1 * (1023.0/(float)rVo - 1.0);
+		// rLogR2 = log(rR2);
+		// rT = (1.0 / (c1 + c2*rLogR2 + c3*rLogR2*rLogR2*rLogR2));
+	}
+
+	if(millis() - time_temp > between_time_temp)
+	{
+		conv::front_temp_read = smooth_temp_output();
+		conv::rear_temp_read = 	conv::front_temp_read;
+		time_temp = millis();
+	}																																																																																																																																																																								
 }
 
 void func::encoder_run()
@@ -86,7 +120,7 @@ void func::encoder_run()
 	func::encoder_left();
 	func::encoder_right();
 
-	if(L == 1 || L == 2)
+	if(L == 1 || L == -1)
 	{
 		conv::mode = 0;
 	}
@@ -94,7 +128,13 @@ void func::encoder_run()
 
 void func::compressor_run()
 {
-	if(conv::mode == 0 || conv::mode == 3) 
+
+	if(conv::mode == 1 || conv::mode == 2 || ( conv::front_speed == 0 && conv::rear_speed == 0))
+	{
+		conv::compressor = false;
+	}	
+
+  else if(conv::mode == 0 || conv::mode == 3) 
 	{
 		if(conv::front_temp_read <= conv::front_temp_set && conv::rear_temp_read <= conv::rear_temp_set)
 		{
@@ -105,10 +145,11 @@ void func::compressor_run()
 			conv::compressor = true;
 		}
 	}
-	else if(conv::mode == 1 || conv::mode == 2)
-	{
-		conv::compressor = false;
-	}
+
+	if(conv::compressor == true)
+		digitalWrite(_compressor,HIGH);
+	else
+		digitalWrite(_compressor,LOW);
 }
  
 void func::fan_run()
@@ -120,85 +161,82 @@ void func::fan_run()
 		{	
 			if(conv::fan_mode == 0) 
 			{
-				if(real_front_speed < func::fmap(conv::front_speed))
+				if(conv::real_front_speed < func::fmap(conv::front_speed))
 				{
-					real_front_speed++;
-					real_rear_speed = real_front_speed;
+					conv::real_front_speed++;
+					conv::real_rear_speed = conv::real_front_speed;
 				}
-				else if(real_front_speed > func::fmap(conv::front_speed))
+				else if(conv::real_front_speed > func::fmap(conv::front_speed))
 				{
-					real_front_speed--;
-					real_rear_speed = real_front_speed;
+					conv::real_front_speed--;
+					conv::real_rear_speed = conv::real_front_speed;
 				}
 			}
 			else if(conv::fan_mode == 1)
 			{
-				if(real_front_speed < func::fmap(conv::front_speed)) real_front_speed++;
-				else if(real_front_speed > func::fmap(conv::front_speed)) real_front_speed--;
+				if(conv::real_front_speed < func::fmap(conv::front_speed)) conv::real_front_speed++;
+				else if(conv::real_front_speed > func::fmap(conv::front_speed)) conv::real_front_speed--;
 			}
 			else if(conv::fan_mode == 2)
 			{
-				if(real_rear_speed < func::fmap(conv::rear_speed)) real_rear_speed++;
-				else if(real_rear_speed > func::fmap(conv::rear_speed)) real_rear_speed--;
+				if(conv::real_rear_speed < func::fmap(conv::rear_speed)) conv::real_rear_speed++;
+				else if(conv::real_rear_speed > func::fmap(conv::rear_speed)) conv::real_rear_speed--;
 			}
 		}
 		else if(conv::mode == 2)
 		{
-			if(conv::fan_mode == 0 && real_front_speed > 0)
+			if(conv::fan_mode == 0 && conv::real_front_speed > 0)
 			{
-				real_front_speed--;
-				real_rear_speed = real_front_speed;    
+				conv::real_front_speed--;
+				conv::real_rear_speed = conv::real_front_speed;    
 			}
-			else if(conv::fan_mode == 1 && real_front_speed > 0)real_front_speed--;
-			else if(conv::fan_mode == 2 && real_rear_speed > 0)real_rear_speed--;
+			else if(conv::fan_mode == 1 && conv::real_front_speed > 0)conv::real_front_speed--;
+			else if(conv::fan_mode == 2 && conv::real_rear_speed > 0)conv::real_rear_speed--;
 		}
 		else if(conv::mode == 3)
 		{
 			if(conv::fan_mode == 0) 
 			{
-				if(real_front_speed < func::afmap(conv::front_temp_read,conv::front_temp_set))
+				if(conv::real_front_speed < func::afmap(conv::front_temp_read,conv::front_temp_set))
 				{
-					real_front_speed++;
-					real_rear_speed = real_front_speed;
+					conv::real_front_speed++;
+					conv::real_rear_speed = conv::real_front_speed;
 				}
-				else if(real_front_speed > func::afmap(conv::front_temp_read,conv::front_temp_set))
+				else if(conv::real_front_speed > func::afmap(conv::front_temp_read,conv::front_temp_set))
 				{
-					real_front_speed--;
-					real_rear_speed = real_front_speed;
+					conv::real_front_speed--;
+					conv::real_rear_speed = conv::real_front_speed;
 				}
 			}
 			else if(conv::fan_mode == 1)
 			{
-				if(real_front_speed < func::afmap(conv::front_temp_read,conv::front_temp_set)) real_front_speed++;
-				else if(real_front_speed > func::afmap(conv::front_temp_read,conv::front_temp_set)) real_front_speed--;
+				if(conv::real_front_speed < func::afmap(conv::front_temp_read,conv::front_temp_set)) conv::real_front_speed++;
+				else if(conv::real_front_speed > func::afmap(conv::front_temp_read,conv::front_temp_set)) conv::real_front_speed--;
 			}
 			else if(conv::fan_mode == 2)
 			{
-				if(real_rear_speed < func::afmap(conv::front_temp_read,conv::front_temp_set)) real_rear_speed++;
-				else if(real_rear_speed > func::afmap(conv::rear_temp_read,conv::rear_temp_set)) real_rear_speed--;
+				if(conv::real_rear_speed < func::afmap(conv::front_temp_read,conv::front_temp_set)) conv::real_rear_speed++;
+				else if(conv::real_rear_speed > func::afmap(conv::rear_temp_read,conv::rear_temp_set)) conv::real_rear_speed--;
 			}
 		}
 	}
-	analogWrite(_front_fan,real_front_speed);
-	analogWrite(_rear_fan,real_rear_speed);
+	analogWrite(_front_fan,conv::real_front_speed);
+	analogWrite(_rear_fan,200);
 }
 
 void func::mode_run()
 {
-	BR = enR.pushType(push_split);
-	if(BR == 1) 
+	if(enRB.onPressed()) 
 	{
 		conv::mode = 3; // pushed auto mode	
-		Serial.println("endoer press ");
-
 	}
-	else if(BR == 2) conv::mode = 1; // long pushed fan only mode
+	// else if(BR == 2) conv::mode = 1; // long pushed fan only mode
 }
 
 
 void func::encoder_left()
 {
-	L = enL.rotate();
+	L = encoder_data(enL);
 	if(L == 1) //CW
 	{
 		if(conv::fan_mode == 0 && conv::front_speed < max_fan_speed)
@@ -215,7 +253,7 @@ void func::encoder_left()
 			conv::rear_speed++;
 		}
 	}
-	else if(L == 2) //CCW
+	if(L == -1) //CCW
 	{
 		if(conv::fan_mode == 0 && conv::front_speed > min_fan_speed)
 		{
@@ -235,7 +273,7 @@ void func::encoder_left()
 
 void func::encoder_right()
 {
-	R = enR.rotate();
+	R = encoder_data(enR);
 	if(R == 1) //CW
 	{
 		if(conv::fan_mode == 0 && conv::front_temp_set < max_temp_set)
@@ -252,7 +290,7 @@ void func::encoder_right()
 			conv::rear_temp_set += c_temp;
 		}
 	}
-	else if(R == 2) //CCW
+	if(R == -1) //CCW
 	{
 		if(conv::fan_mode == 0 && conv::front_temp_set > min_temp_set)
 		{

@@ -25,6 +25,8 @@ void debug_conv()
 	Serial.print("fan_mode 				:: ");Serial.println(conv::fan_mode);
 	Serial.print("front_speed 		:: ");Serial.println(conv::front_speed);
 	Serial.print("rear_speed  		:: ");Serial.println(conv::rear_speed);
+	Serial.print("real_front_speed  :: ");Serial.println(conv::real_front_speed);
+	Serial.print("real_rear_speed  	:: ");Serial.println(conv::real_rear_speed);
 	Serial.print("mode 						:: ");Serial.println(conv::mode);
 	Serial.print("blacklight 			:: ");Serial.println(conv::blacklight);
 	Serial.print("front_temp_set 	:: ");Serial.println(conv::front_temp_set);

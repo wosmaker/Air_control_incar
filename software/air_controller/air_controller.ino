@@ -1,3 +1,4 @@
+
 #include "air_controller.h"
 
 void setPwmFrequency(uint8_t pin, uint16_t divisor) {
@@ -31,11 +32,12 @@ void setPwmFrequency(uint8_t pin, uint16_t divisor) {
 }
 
 void setup() {
-	// setPwmFrequency(9,1024);
-
-	// debug::begin();
+	setPwmFrequency(9,1024);
+	debug::begin();
 	func::begin();
 	display::setup();
+	// eeprom::put();
+	eeprom::get();
 }
 
 void loop() {
@@ -44,6 +46,9 @@ void loop() {
 	func::encoder_run();
 	func::mode_run();
 	func::temp_read_run();
-	debug::conv();
 	display::run();
+	eeprom::update();
+	
+	debug::conv();
+
 }

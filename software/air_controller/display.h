@@ -38,60 +38,46 @@ public:
  97, 34, 71, 0, 98, 62, 35, 0, 4, 62, 16, 0, 8, 34, 8, 0, 1, 227, 192, 0, 7, 99, 112, 0, 0, 231, 128, 0, 0,
  182, 128, 0, 3, 148, 224, 0, 3, 128, 224, 0, 3, 128, 224, 0, 3, 0, 96, 0};
 
-float buffer_front_tempset = 0;
-float buffer_front_tempread = 0;
-
 uint8_t buffer_front_speed = 0;
-uint8_t buffer_mode = 99;
+uint8_t buffer_rear_speed = 0;
 
 
 void tempset()
 {
-	if(buffer_front_tempset != conv::front_temp_set)
-	{
-		tft.setTextSize(2);
-		// clear
-		tft.setTextColor(clear_temp);
-    tft.setCursor(103,56);
-    tft.print(buffer_front_tempset,1);
-
-		// set
-		tft.setTextColor(ST77XX_WHITE);
-    tft.setCursor(103,56);
-    tft.print(conv::front_temp_set,1);
-		buffer_front_tempset = conv::front_temp_set;
-	}
+	tft.setTextSize(2);
+	tft.setTextColor(ST7735_WHITE,clear_temp);
+	tft.setCursor(103,56);
+	tft.print(conv::front_temp_set,1);
+	buffer_front_tempset = conv::front_temp_set;
 }
 
 void tempread()
 {
-	if(buffer_front_tempread != conv::front_temp_read)
-	{
-		tft.setTextSize(2);
-		//clear
-    tft.setTextColor(clear_temp);
-    tft.setCursor(12,56);
-    tft.print(buffer_front_tempread,1);
-		//set
-    tft.setTextColor(ST7735_WHITE);
-    tft.setCursor(12,56);
-    tft.print(conv::front_temp_read,1);
-
-		buffer_front_tempread = conv::front_temp_read;
-	}
-
+	tft.setTextSize(2);
+	tft.setTextColor(ST7735_WHITE,clear_temp);
+	tft.setCursor(12,56);
+	tft.print(conv::front_temp_read,1);
 }
 
 void fanspeed()
 {
-	if(buffer_front_speed != conv::front_speed)
+	if(conv::mode == 3)
 	{
-		//clear
-		tft.fillRect( 35, 12, map(buffer_front_speed,min_fan_speed,max_fan_speed,0,105),5, ST7735_BLACK );
-		//set
-		tft.fillRect( 35, 12, map( conv::front_speed,min_fan_speed,max_fan_speed,0,105),5, ST7735_WHITE );
-		buffer_front_speed = conv::front_speed;
+		 // front 
+		buffer_front_speed =  map( conv::real_front_speed,min_pwm_speed,max_pwm_speed,0,105);
+		tft.fillRect( 35, 12, buffer_front_speed,5, ST7735_WHITE);
+		tft.fillRect(35 + buffer_front_speed, 12, 105-buffer_front_speed,5,ST7735_BLACK);
+
+		// rear
+	
 	}
+	else 
+	{
+		buffer_front_speed = map( conv::front_speed,min_fan_speed,max_fan_speed,0,105);
+		tft.fillRect( 35, 12,buffer_front_speed,5, ST7735_WHITE );
+		tft.fillRect( 35 + buffer_front_speed, 12, 105 - buffer_front_speed, 5, ST7735_BLACK );
+	}
+	
 }
 
 void compressor()
@@ -101,7 +87,7 @@ void compressor()
 		if(conv::compressor == true)
 			tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_WHITE ); 
 		else
-			tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_BLACK ); 
+			tft.fillRect( 68, 48,25,25, ST77XX_BLACK );
 	}
 	else if(conv::mode == 1 || conv::mode == 2)
 	{
@@ -111,34 +97,17 @@ void compressor()
 
 void mode()
 {
-	if(buffer_mode != conv::mode)
-	{
-		tft.setTextSize(2);
-		tft.setCursor(102,103);
-		//clear
-		tft.setTextColor(ST7735_BLACK);
-		if(buffer_mode == 0)
-		  tft.print("COOL");
-		else if(buffer_mode == 1)
-			tft.print("FAN");
-		else if(buffer_mode == 2)
-		  tft.print("OFF");
-		else if(buffer_mode == 3)
-			tft.print("AUTO");
-
-		//set
-		tft.setCursor(102,103);
-		tft.setTextColor(ST77XX_WHITE);
-		if(conv::mode == 0)
-		  tft.print("COOL");
-		else if(conv::mode == 1)
-			tft.print("FAN");
-		else if(conv::mode == 2)
-		  tft.print("OFF");
-		else if(conv::mode == 3)
-			tft.print("AUTO");
-		buffer_mode = conv::mode;
-	}
+	tft.setTextSize(2);
+	tft.setCursor(102,103);
+	tft.setTextColor(ST77XX_WHITE,ST77XX_BLACK);
+	if(conv::mode == 0)
+		tft.print("COOL");
+	else if(conv::mode == 1)
+		tft.print(" FAN");
+	else if(conv::mode == 2)
+		tft.print(" OFF");
+	else if(conv::mode == 3)
+		tft.print("AUTO");
 }
 
 void display::run()
@@ -147,19 +116,20 @@ void display::run()
 	fanspeed();
 	compressor();
 	mode();
-	// tempread();
+	tempread();
 }
 
 void display::setup()
 {
+	tft.begin(115200);
 	tft.initR(INITR_BLACKTAB);
 	analogWrite(tft_blacklight,conv::blacklight);
 	tft.setRotation( 1 );  
 	tft.fillScreen(ST77XX_BLACK);
 	tft.setTextWrap(false);
 
-	tft.fillRoundRect( 0,32,65, 60, 0, ST77XX_BLACK);
-	tft.fillRoundRect( 95,32,65, 60, 0, ST77XX_BLACK);
+	// tft.fillRoundRect( 0,32,65, 60, 0, ST77XX_BLACK);
+	// tft.fillRoundRect( 95,32,65, 60, 0, ST77XX_BLACK);
 
 	tft.setTextSize(1);
 	tft.setTextColor(ST77XX_WHITE);
