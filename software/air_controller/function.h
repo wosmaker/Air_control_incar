@@ -42,19 +42,21 @@ class func
 
 void smooth_temp_input(float input)
 {
+	input = ((int)(input * 10))/10.0;
 	s_temp[smooth_i++] = input;
 	if(smooth_i == 21) smooth_i = 0;
 }
 
 float smooth_temp_output()
 {
-	float sum_temp = 0;
+	float output = 0;
 	for(int i = 0 ; i <= 20 ; i++)
 	{
-		sum_temp += s_temp[i]; 
+		output += s_temp[i]; 
 	}
-	sum_temp = sum_temp / 21; 
-	return sum_temp;
+	output = output / 21; 
+	output = ((int)(output * 10))/10.0;
+	return output;
 }
 
 void func::begin()
@@ -221,7 +223,7 @@ void func::fan_run()
 		}
 	}
 	analogWrite(_front_fan,conv::real_front_speed);
-	analogWrite(_rear_fan,200);
+	analogWrite(_rear_fan,conv::real_rear_speed);
 }
 
 void func::mode_run()

@@ -41,7 +41,7 @@ void debug_conv()
 
 void debug::begin()																								
 {
-	Serial.begin(9600);
+	Serial.begin(115200);
 }
 
 void debug::conv()

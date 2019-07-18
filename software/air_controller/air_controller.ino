@@ -32,8 +32,9 @@ void setPwmFrequency(uint8_t pin, uint16_t divisor) {
 }
 
 void setup() {
+	TCCR0B = TCCR0B & B11111000 | B00000001; 
 	setPwmFrequency(9,1024);
-	debug::begin();
+	// debug::begin();
 	func::begin();
 	display::setup();
 	// eeprom::put();
@@ -49,6 +50,6 @@ void loop() {
 	display::run();
 	eeprom::update();
 	
-	debug::conv();
+	// debug::conv();
 
 }

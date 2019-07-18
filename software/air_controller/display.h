@@ -64,24 +64,24 @@ void fanspeed()
 	{
 		 // front 
 		buffer_front_speed =  map( conv::real_front_speed,min_pwm_speed,max_pwm_speed,5,105);
-		tft.fillRect( 35, 5, buffer_front_speed,5, ST7735_WHITE);
-		tft.fillRect(35 + buffer_front_speed, 5, 105-buffer_front_speed,5,ST7735_BLACK);
+		tft.fillRect( 35,12, buffer_front_speed,4, ST7735_WHITE);
+		tft.fillRect(35 + buffer_front_speed, 12, 105-buffer_front_speed,4,ST7735_BLACK);
 
 		// rear
 		buffer_rear_speed =  map( conv::real_rear_speed,min_pwm_speed,max_pwm_speed,5,105);
-		tft.fillRect( 35, 14, buffer_front_speed,5, ST7735_WHITE);
-		tft.fillRect(35 + buffer_front_speed, 14, 105-buffer_front_speed,5,ST7735_BLACK);
+		tft.fillRect( 35, 17, buffer_front_speed,4, ST7735_WHITE);
+		tft.fillRect(35 + buffer_front_speed, 17, 105-buffer_front_speed,4,ST7735_BLACK);
 	}
 	else 
 	{
 		buffer_front_speed = map( conv::front_speed,min_fan_speed,max_fan_speed,5,105);
-		tft.fillRect( 35, 12,buffer_front_speed,5, ST7735_WHITE );
-		tft.fillRect( 35 + buffer_front_speed, 12, 105 - buffer_front_speed, 5, ST7735_BLACK );
+		tft.fillRect( 35, 12,buffer_front_speed,4, ST7735_WHITE );
+		tft.fillRect( 35 + buffer_front_speed, 12, 105 - buffer_front_speed, 4, ST7735_BLACK );
 
 		// rear
 		buffer_rear_speed =  map( conv::rear_speed,min_fan_speed,max_fan_speed,5,105);
-		tft.fillRect( 35, 14, buffer_front_speed,5, ST7735_WHITE);
-		tft.fillRect(35 + buffer_front_speed, 14, 105-buffer_front_speed,5,ST7735_BLACK);
+		tft.fillRect( 35, 17, buffer_front_speed,4, ST7735_WHITE);
+		tft.fillRect(35 + buffer_front_speed, 17, 105-buffer_front_speed,4,ST7735_BLACK);
 	}
 	
 }
@@ -93,7 +93,7 @@ void compressor()
 		if(conv::compressor == true)
 			tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_WHITE ); 
 		else
-			tft.fillRect( 68, 48,25,25, ST77XX_BLACK );
+			tft.fillRect( 70, 46,29,29, ST77XX_BLACK );
 	}
 	else if(conv::mode == 1 || conv::mode == 2)
 	{
@@ -145,15 +145,20 @@ void display::setup()
 	tft.setTextColor(ST77XX_WHITE);
 	tft.setCursor(16,39);
 	tft.print("room");
-	
+
 	tft.setTextSize(1);
 	tft.setTextColor(ST77XX_WHITE);
-	tft.setCursor(10,78);
-	tft.print("Celsuis");
-	
-	tft.setTextColor(ST77XX_WHITE); 
-	tft.setCursor(108,78);
-	tft.print("Celsuis");
+	tft.setCursor(15,78);
+	tft.print("o");
+	tft.setTextSize(2);
+	tft.print("C");
+
+	tft.setTextSize(1);
+	tft.setTextColor(ST77XX_WHITE);
+	tft.setCursor(114,78);
+	tft.print("o");
+	tft.setTextSize(2);
+	tft.print("C");
 
   tft.drawBitmap( 8, 3,fan,25, 25, ST7735_WHITE );
 }
