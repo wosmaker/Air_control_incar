@@ -11,7 +11,6 @@ private:
 public:
 	static void begin();
 	static void conv();
-
 };
 
 uint16_t debug_count = 0;

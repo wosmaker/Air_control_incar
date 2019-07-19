@@ -19,6 +19,7 @@ class func
 
 	public:
 		static void begin();
+		static void run();
 
 		static void encoder_run();
 		static void compressor_run();
@@ -31,7 +32,6 @@ class func
 	uint64_t time_fan = 0;
 	uint64_t time_temp = 0;
 	
-
 	RBD::Button enLB(_leften_btn);
 	RBD::Button enRB(_righten_btn);
 	
@@ -67,6 +67,15 @@ void func::begin()
 	attach_encoder(enR, _righten_outa, _righten_outb);
 }
 
+void func::run()
+{
+	func::compressor_run();
+	func::fan_run();
+	func::encoder_run();
+	func::mode_run();
+	func::temp_read_run();
+}
+
 uint8_t func::fmap(uint8_t i)
 {
 	uint8_t speed;
@@ -89,7 +98,7 @@ uint8_t func::afmap(float temp_read,float temp_set)
 
 void func::temp_read_run()
 {
-	if(millis() - time_smooth_temp > 100)
+	if(millis() - time_smooth_temp > 50)
 	{
 		int fVo , rVo;
 		float R1 = 100000;

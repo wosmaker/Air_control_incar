@@ -21,7 +21,7 @@
 #define enL 0
 #define enR 1
 
-#define between_time_fan 25 // 1000  = 1 sec
+#define between_time_fan 10 // 1000  = 1 sec
 #define between_time_debug 3000
 #define between_time_change 60000 // for save to eeprom
 #define between_time_temp 3000

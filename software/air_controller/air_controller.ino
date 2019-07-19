@@ -32,24 +32,18 @@ void setPwmFrequency(uint8_t pin, uint16_t divisor) {
 }
 
 void setup() {
-	TCCR0B = TCCR0B & B11111000 | B00000001; 
 	setPwmFrequency(9,1024);
-	// debug::begin();
-	func::begin();
+	func::begin();	
+	// eeprom::put();	
+	eeprom::get();	
 	display::setup();
-	// eeprom::put();
-	eeprom::get();
+	// debug::begin();
+
 }
 
 void loop() {
-	func::compressor_run();
-	func::fan_run();
-	func::encoder_run();
-	func::mode_run();
-	func::temp_read_run();
+	func::run();
 	display::run();
 	eeprom::update();
-	
 	// debug::conv();
-
 }

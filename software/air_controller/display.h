@@ -38,82 +38,119 @@ public:
  97, 34, 71, 0, 98, 62, 35, 0, 4, 62, 16, 0, 8, 34, 8, 0, 1, 227, 192, 0, 7, 99, 112, 0, 0, 231, 128, 0, 0,
  182, 128, 0, 3, 148, 224, 0, 3, 128, 224, 0, 3, 128, 224, 0, 3, 0, 96, 0};
 
+uint8_t front_speed = 0;
+uint8_t rear_speed = 0;
+
 uint8_t buffer_front_speed = 0;
 uint8_t buffer_rear_speed = 0;
+
+uint8_t buffer_mode = 99;
+bool buffer_compressor;
+
+float buffer_tempset{2.1f} = 99.9;
+float buffer_tempread{2.1f} = 99.9;
 
 
 void tempset()
 {
-	tft.setTextSize(2);
-	tft.setTextColor(ST7735_WHITE,clear_temp);
-	tft.setCursor(103,56);
-	tft.print(conv::front_temp_set,1);
+	if(buffer_tempset != conv::front_temp_set)
+	{
+		tft.setTextSize(2);
+		tft.setTextColor(ST7735_WHITE,clear_temp);
+		tft.setCursor(103,56);
+		tft.print(conv::front_temp_set,1);
+
+		buffer_tempset = conv::front_temp_set;
+	}
 }
 
 void tempread()
-{
-	tft.setTextSize(2);
-	tft.setTextColor(ST7735_WHITE,clear_temp);
-	tft.setCursor(12,56);
-	tft.print(conv::front_temp_read,1);
+{ 
+	if(buffer_tempread != conv::front_temp_read)
+	{
+		tft.setTextSize(2);
+		tft.setTextColor(ST7735_WHITE,clear_temp);
+		tft.setCursor(12,56);
+		tft.print(conv::front_temp_read,1);
+
+		buffer_tempread = conv::front_temp_read;
+	}
 }
 
 void fanspeed()
 {
 	if(conv::mode == 3)
 	{
-		 // front 
-		buffer_front_speed =  map( conv::real_front_speed,min_pwm_speed,max_pwm_speed,5,105);
-		tft.fillRect( 35,12, buffer_front_speed,4, ST7735_WHITE);
-		tft.fillRect(35 + buffer_front_speed, 12, 105-buffer_front_speed,4,ST7735_BLACK);
+		if(buffer_front_speed != conv::real_front_speed || buffer_rear_speed != conv::real_rear_speed)
+		{
+			front_speed =  map( conv::real_front_speed,min_pwm_speed,max_pwm_speed,2,105);
+			rear_speed =  map( conv::real_rear_speed,min_pwm_speed,max_pwm_speed,2,105);
 
-		// rear
-		buffer_rear_speed =  map( conv::real_rear_speed,min_pwm_speed,max_pwm_speed,5,105);
-		tft.fillRect( 35, 17, buffer_front_speed,4, ST7735_WHITE);
-		tft.fillRect(35 + buffer_front_speed, 17, 105-buffer_front_speed,4,ST7735_BLACK);
+			tft.fillRect( 35,12, front_speed,4, ST7735_WHITE);
+			tft.fillRect( 35, 17, rear_speed,4, ST7735_WHITE);
+
+			tft.fillRect(35 + front_speed, 12, 105-front_speed,4,ST7735_BLACK);
+			tft.fillRect(35 + rear_speed, 17, 105-rear_speed,4,ST7735_BLACK);
+
+			buffer_front_speed = conv::real_front_speed;
+			buffer_rear_speed = conv::real_rear_speed;
+		}
 	}
 	else 
 	{
-		buffer_front_speed = map( conv::front_speed,min_fan_speed,max_fan_speed,5,105);
-		tft.fillRect( 35, 12,buffer_front_speed,4, ST7735_WHITE );
-		tft.fillRect( 35 + buffer_front_speed, 12, 105 - buffer_front_speed, 4, ST7735_BLACK );
+		if(buffer_front_speed != conv::front_speed || buffer_rear_speed != conv::rear_speed)
+		{
+			front_speed = map( conv::front_speed,min_fan_speed,max_fan_speed,0,105);
+			rear_speed =  map( conv::rear_speed,min_fan_speed,max_fan_speed,0,105);
 
-		// rear
-		buffer_rear_speed =  map( conv::rear_speed,min_fan_speed,max_fan_speed,5,105);
-		tft.fillRect( 35, 17, buffer_front_speed,4, ST7735_WHITE);
-		tft.fillRect(35 + buffer_front_speed, 17, 105-buffer_front_speed,4,ST7735_BLACK);
+			tft.fillRect( 35, 12,front_speed,4, ST7735_WHITE );
+			tft.fillRect( 35, 17, rear_speed,4, ST7735_WHITE);
+
+			tft.fillRect( 35 + front_speed, 12, 105 - front_speed, 4, ST7735_BLACK );
+			tft.fillRect(35 + rear_speed, 17, 105-rear_speed,4,ST7735_BLACK);
+
+			buffer_front_speed = conv::front_speed;
+			buffer_rear_speed = conv::rear_speed;
+		}
 	}
-	
 }
 
 void compressor()
 {
-	if(conv::mode == 0 || conv::mode ==3)
+	if(buffer_compressor != conv::compressor)
 	{
-		if(conv::compressor == true)
-			tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_WHITE ); 
-		else
-			tft.fillRect( 70, 46,29,29, ST77XX_BLACK );
-	}
-	else if(conv::mode == 1 || conv::mode == 2)
-	{
-		tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_RED ); 
+		if(conv::mode == 0 || conv::mode ==3)
+		{
+			if(conv::compressor == true)
+				tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_WHITE ); 
+			else
+				tft.fillRect( 70, 46,29,29, ST77XX_BLACK );
+		}
+		else if(conv::mode == 1 || conv::mode == 2)
+		{
+			tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_RED ); 
+		}
 	}
 }
 
 void mode()
 {
-	tft.setTextSize(2);
-	tft.setCursor(102,103);
-	tft.setTextColor(ST77XX_WHITE,ST77XX_BLACK);
-	if(conv::mode == 0)
-		tft.print("COOL");
-	else if(conv::mode == 1)
-		tft.print(" FAN");
-	else if(conv::mode == 2)
-		tft.print(" OFF");
-	else if(conv::mode == 3)
-		tft.print("AUTO");
+	if(buffer_mode != conv::mode)
+	{
+		tft.setTextSize(2);
+		tft.setCursor(102,103);
+		tft.setTextColor(ST77XX_WHITE,ST77XX_BLACK);
+		if(conv::mode == 0)
+			tft.print("COOL");
+		else if(conv::mode == 1)
+			tft.print(" FAN");
+		else if(conv::mode == 2)
+			tft.print(" OFF");
+		else if(conv::mode == 3)
+			tft.print("AUTO");
+
+		buffer_mode = conv::mode;
+	}
 }
 
 void display::run()
