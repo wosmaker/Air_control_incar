@@ -16,15 +16,15 @@
 #define max_temp_set 32
 
 #define c_temp 0.5 // change temperature
-#define e_temp 0.3
+#define e_temp 0.2
 
 #define enL 0
 #define enR 1
 
-#define between_time_fan 10 // 1000  = 1 sec
+#define between_time_fan 15 // 1000  = 1 sec
 #define between_time_debug 3000
 #define between_time_change 60000 // for save to eeprom
-#define between_time_temp 3000
+#define between_time_temp 2500
 
 #define push_split 500
 

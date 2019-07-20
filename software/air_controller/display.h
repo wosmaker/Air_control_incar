@@ -47,8 +47,8 @@ uint8_t buffer_rear_speed = 0;
 uint8_t buffer_mode = 99;
 bool buffer_compressor;
 
-float buffer_tempset{2.1f} = 99.9;
-float buffer_tempread{2.1f} = 99.9;
+float buffer_tempset = 99.9;
+float buffer_tempread = 99.9;
 
 
 void tempset()
@@ -117,20 +117,22 @@ void fanspeed()
 
 void compressor()
 {
-	if(buffer_compressor != conv::compressor)
-	{
-		if(conv::mode == 0 || conv::mode ==3)
+	// if(buffer_compressor != conv::compressor)
+	// {
+		if((conv::mode == 0 || conv::mode ==3 )&& conv::front_speed != 0)
 		{
 			if(conv::compressor == true)
 				tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_WHITE ); 
 			else
-				tft.fillRect( 70, 46,29,29, ST77XX_BLACK );
+				tft.fillRect( 66, 46,29,29, ST77XX_BLACK );
 		}
-		else if(conv::mode == 1 || conv::mode == 2)
+		else if(conv::mode == 1 || conv::mode == 2 || conv::front_speed == 0)
 		{
 			tft.drawBitmap( 68, 48,ice,25, 25, ST77XX_RED ); 
 		}
-	}
+
+	// 	buffer_compressor = conv::compressor;
+	// }
 }
 
 void mode()

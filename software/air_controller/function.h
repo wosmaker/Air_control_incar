@@ -37,14 +37,14 @@ class func
 	
 	uint8_t smooth_i = 0;
 	uint64_t time_smooth_temp = 0;
-	float s_temp[20]{2.1f};
+	float s_temp[200]{2.1f};
 
 
 void smooth_temp_input(float input)
 {
 	input = ((int)(input * 10))/10.0;
 	s_temp[smooth_i++] = input;
-	if(smooth_i == 21) smooth_i = 0;
+	if(smooth_i == 201) smooth_i = 0;
 }
 
 float smooth_temp_output()
@@ -98,7 +98,7 @@ uint8_t func::afmap(float temp_read,float temp_set)
 
 void func::temp_read_run()
 {
-	if(millis() - time_smooth_temp > 50)
+	if(millis() - time_smooth_temp > 20)
 	{
 		int fVo , rVo;
 		float R1 = 100000;
